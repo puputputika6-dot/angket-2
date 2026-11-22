@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Angket Kepercayaan Diri dalam Belajar Mahasiswa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    /* Custom scrollbar untuk tabel rekap */
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased">
+
+  <!-- Header & Navigasi Utama -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Instrumen Penelitian Mahasiswa</h1>
+          <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+            <span id="db-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span id="db-status-text">Menghubungkan database terpusat...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Switcher -->
+      <nav class="flex bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto w-full sm:w-auto">
+        <button id="tab-btn-form" type="button"
+          class="flex-1 sm:flex-initial px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-indigo-700 shadow-sm flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span>Isi Angket</span>
+        </button>
+        <button id="tab-btn-rekap" type="button"
+          class="flex-1 sm:flex-initial px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center justify-center gap-2">
+          <svg id="nav-lock-icon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span>Rekap Data</span>
+          <span id="nav-respondent-badge" class="ml-0.5 px-2 py-0.5 text-xs font-bold rounded-full bg-indigo-100 text-indigo-700">0</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Progress Bar Pengisian (Hanya muncul di Tab Form) -->
+    <div id="form-progress-bar-container" class="bg-slate-50 border-t border-slate-200/80 px-4 py-2">
+      <div class="max-w-5xl mx-auto flex items-center gap-3">
+        <span class="text-xs font-semibold text-slate-600 whitespace-nowrap">Progres: <span id="progress-count" class="text-indigo-600 font-bold">0/20</span> pernyataan</span>
+        <div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+          <div id="progress-fill" class="h-full bg-indigo-600 transition-all duration-300 rounded-full" style="width: 0%"></div>
+        </div>
+        <span id="progress-percent" class="text-xs font-bold text-slate-500 w-9 text-right">0%</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Konten Utama -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+    <!-- ========================================================= -->
+    <!-- TAB 1: FORM PENGISIAN ANGKET MAHASISWA                    -->
+    <!-- ========================================================= -->
+    <section id="section-form" class="space-y-6">
+
+      <!-- Banner Peringatan Jika Pengisian Dikunci oleh Admin -->
+      <div id="form-locked-banner" class="hidden bg-rose-50 border-2 border-rose-200 rounded-2xl p-6 text-center shadow-sm">
+        <div class="w-14 h-14 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h2 class="text-xl font-bold text-rose-900">Pengisian Angket Telah Ditutup / Dikunci</h2>
+        <p class="text-sm text-rose-700 max-w-lg mx-auto mt-1.5 leading-relaxed">
+          Admin / Peneliti saat ini telah mengunci penerimaan jawaban baru untuk angket ini. Terima kasih atas partisipasi Anda.
+        </p>
+      </div>
+
+      <!-- Layar Konfirmasi Sukses Setelah Mengirim -->
+      <div id="form-success-card" class="hidden bg-white border border-emerald-200 rounded-2xl p-6 sm:p-10 text-center shadow-sm">
+        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900">Terima Kasih! Jawaban Berhasil Tersimpan</h2>
+        <p class="text-slate-600 text-sm sm:text-base max-w-xl mx-auto mt-2">
+          Data Anda telah masuk secara otomatis ke dalam sistem rekapitulasi terpusat peneliti.
+        </p>
+        <div id="submitted-summary-box" class="mt-6 max-w-md mx-auto bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-sm space-y-1.5">
+          <!-- Diisi via JS -->
+        </div>
+        <div class="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button id="btn-fill-again" type="button"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition shadow-sm">
+            Isi Ulang untuk Responden Lain
+          </button>
+          <button id="btn-go-rekap-from-success" type="button"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-semibold text-sm transition">
+            Lihat Status Rekap Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Kontainer Utama Form Angket -->
+      <form id="angket-form" novalidate class="space-y-6">
+        <!-- Kop Judul & Petunjuk -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="h-2 bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500"></div>
+          <div class="p-6 sm:p-8">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 mb-3">
+              Kuesioner Akademik • 20 Butir Pernyataan
+            </span>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              Angket Kepercayaan Diri dalam Belajar Mahasiswa
+            </h2>
+            <div class="mt-4 p-4 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-sm text-amber-900 font-medium leading-relaxed">
+                Pengisian angket dibawah ini tidak akan mempengaruhi nilai Anda, isilah dengan teliti dan cermat sesuai kondisi yang terjadi!
+              </p>
+            </div>
+
+            <!-- Petunjuk Skala Likert -->
+            <div class="mt-5 pt-5 border-t border-slate-100">
+              <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5">Petunjuk Pengisian Angket:</p>
+              <p class="text-sm text-slate-600 mb-3">
+                Pilihlah salah satu alternatif jawaban yang tersedia pada setiap pernyataan sesuai dengan keadaan diri Anda yang sebenarnya:
+              </p>
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2">
+                  <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center shrink-0">SS</span>
+                  <span class="font-medium text-slate-700">Sangat Setuju</span>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2">
+                  <span class="w-7 h-7 rounded-lg bg-indigo-500 text-white font-bold flex items-center justify-center shrink-0">S</span>
+                  <span class="font-medium text-slate-700">Setuju</span>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2">
+                  <span class="w-7 h-7 rounded-lg bg-slate-500 text-white font-bold flex items-center justify-center shrink-0">RR</span>
+                  <span class="font-medium text-slate-700">Ragu-Ragu</span>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2">
+                  <span class="w-7 h-7 rounded-lg bg-orange-500 text-white font-bold flex items-center justify-center shrink-0">TS</span>
+                  <span class="font-medium text-slate-700">Tidak Setuju</span>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center gap-2 col-span-2 sm:col-span-1">
+                  <span class="w-7 h-7 rounded-lg bg-rose-600 text-white font-bold flex items-center justify-center shrink-0">STS</span>
+                  <span class="font-medium text-slate-700">Sangat Tidak Setuju</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Identitas Mahasiswa -->
+        <div id="identity-card" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-4">
+            <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-extrabold flex items-center justify-center">A</span>
+            Identitas Responden
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="input-nama" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                Nama Lengkap <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="input-nama" required placeholder="Contoh: Ahmad Fauzi"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+              <p id="err-nama" class="hidden text-xs text-rose-600 mt-1 font-medium">Nama lengkap wajib diisi.</p>
+            </div>
+
+            <div>
+              <label for="input-nim" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                NIM <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="input-nim" required placeholder="Contoh: 2301020045"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+              <p id="err-nim" class="hidden text-xs text-rose-600 mt-1 font-medium">NIM wajib diisi.</p>
+            </div>
+
+            <div>
+              <label for="input-kelas" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                Semester / Kelas <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="input-kelas" required placeholder="Contoh: Semester 4 / Kelas B"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+              <p id="err-kelas" class="hidden text-xs text-rose-600 mt-1 font-medium">Semester/Kelas wajib diisi.</p>
+            </div>
+          </div>
+
+          <!-- Peringatan Duplikasi NIM jika terdeteksi di database -->
+          <div id="nim-duplicate-warning" class="hidden mt-4 p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span class="font-bold">Perhatian:</span> NIM ini tercatat sudah pernah mengisi angket sebelumnya.
+            </div>
+            <label class="inline-flex items-center gap-2 font-semibold cursor-pointer select-none">
+              <input type="checkbox" id="allow-duplicate-nim" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <span>Tetap izinkan kirim ulang</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Daftar 20 Butir Pernyataan -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5 pb-4 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-extrabold flex items-center justify-center">B</span>
+              Daftar Pernyataan Angket (20 Butir)
+            </h3>
+            <span class="text-xs text-slate-500">Semua nomor wajib diisi sebelum dikirim</span>
+          </div>
+
+          <div id="questions-container" class="space-y-4">
+            <!-- 20 Soal akan dirender di sini oleh JavaScript -->
+          </div>
+        </div>
+
+        <!-- Tombol Kirim -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="text-xs sm:text-sm text-slate-600 text-center sm:text-left">
+            Pastikan identitas dan seluruh <span class="font-bold text-slate-900">20 pernyataan</span> telah terisi dengan benar.
+          </div>
+          <button type="submit" id="btn-submit-angket"
+            class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-md shadow-indigo-200 transition flex items-center justify-center gap-2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            <span>Kirim Jawaban Angket</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- TAB 2: REKAP DATA TERPUSAT & KUNCI AKSES (ADMIN)          -->
+    <!-- ========================================================= -->
+    <section id="section-rekap" class="hidden space-y-6">
+
+      <!-- Layar Kunci PIN Akses Rekap Data -->
+      <div id="rekap-lock-screen" class="max-w-md mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">Rekap Data Terkunci</h2>
+        <p class="text-sm text-slate-600 mt-1.5">
+          Masukkan PIN / Kata Sandi Admin untuk melihat daftar responden yang sudah mengisi dan mengelola kunci angket.
+        </p>
+
+        <form id="unlock-rekap-form" class="mt-6 space-y-3 text-left">
+          <div>
+            <label for="input-admin-pin" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+              PIN / Kata Sandi Akses
+            </label>
+            <input type="password" id="input-admin-pin" placeholder="Masukkan PIN Admin..." required
+              class="w-full px-4 py-3 rounded-xl border border-slate-300 text-center text-base font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            <p id="pin-error-msg" class="hidden text-xs text-rose-600 font-semibold mt-1.5 text-center">
+              PIN salah! Silakan periksa kembali PIN Anda.
+            </p>
+          </div>
+          <button type="submit"
+            class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition shadow-sm cursor-pointer">
+            Buka Kunci Rekap Data
+          </button>
+        </form>
+
+        <!-- Kotak Info Petunjuk PIN Default -->
+        <div class="mt-6 p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 text-left space-y-1">
+          <div class="font-bold text-slate-800 flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+            <span>Info Akses Peneliti / Admin:</span>
+          </div>
+          <p>PIN Default saat ini: <code id="hint-default-pin" class="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">ADMIN2026</code></p>
+          <p class="text-[11px] text-slate-500">Anda dapat mengubah PIN ini setelah masuk ke halaman rekap data.</p>
+        </div>
+      </div>
+
+      <!-- Dashboard Rekap Data (Terlihat setelah PIN benar) -->
+      <div id="rekap-dashboard" class="hidden space-y-6">
+
+        <!-- Bar Kontrol Kunci & Aksi Admin -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Database Terpusat Aktif</span>
+              <span id="form-status-pill" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">Form Dibuka</span>
+            </div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-1.5">Rekapitulasi Responden Angket</h2>
+            <p class="text-xs sm:text-sm text-slate-500">Seluruh pengisian dari HP, tablet, dan laptop otomatis tergabung real-time di sini.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Saklar Kunci/Tutup Penerimaan Angket -->
+            <button id="btn-toggle-form-lock" type="button"
+              class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition flex items-center gap-2 cursor-pointer bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span id="btn-toggle-form-lock-text">Kunci Pengisian Form</span>
+            </button>
+
+            <!-- Tombol Ubah PIN -->
+            <button id="btn-open-change-pin" type="button"
+              class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+              <span>Ubah PIN</span>
+            </button>
+
+            <!-- Tombol Kunci Kembali Layar Rekap -->
+            <button id="btn-lock-rekap-now" type="button"
+              class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span>Kunci Kembali Rekap</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Kartu Statistik Ringkas -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Responden</p>
+            <p id="stat-total" class="text-2xl sm:text-3xl font-extrabold text-indigo-600 mt-1">0</p>
+            <p class="text-xs text-slate-400 mt-1">Dari semua perangkat</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rata-rata Skor</p>
+            <p id="stat-avg" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">0.0</p>
+            <p class="text-xs text-slate-400 mt-1">Rentang skor 20 – 100</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Kategori Tinggi</p>
+            <p id="stat-high" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1">0</p>
+            <p class="text-xs text-slate-400 mt-1">Skor &ge; 74 (Percaya Diri)</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sedang / Rendah</p>
+            <p id="stat-mid-low" class="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-1">0 / 0</p>
+            <p class="text-xs text-slate-400 mt-1">Sedang (47-73) / Rendah (&le;46)</p>
+          </div>
+        </div>
+
+        <!-- Filter, Pencarian & Export CSV -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="relative flex-1 max-w-md">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input type="text" id="search-rekap" placeholder="Cari nama, NIM, atau semester/kelas..."
+                class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+
+            <div class="flex items-center gap-2">
+              <select id="filter-kategori" class="px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="ALL">Semua Kategori</option>
+                <option value="Tinggi">Kategori Tinggi</option>
+                <option value="Sedang">Kategori Sedang</option>
+                <option value="Rendah">Kategori Rendah</option>
+              </select>
+
+              <button id="btn-export-csv" type="button"
+                class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Export Excel / CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabel Rekap Lengkap -->
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[11px] tracking-wider">
+                  <th class="py-3 px-3 sticky left-0 bg-slate-50 z-10">No</th>
+                  <th class="py-3 px-3 whitespace-nowrap">Waktu Isi</th>
+                  <th class="py-3 px-4 whitespace-nowrap">Nama Mahasiswa</th>
+                  <th class="py-3 px-3 whitespace-nowrap">NIM</th>
+                  <th class="py-3 px-3 whitespace-nowrap">Semester/Kelas</th>
+                  <th class="py-3 px-3 text-center whitespace-nowrap">Skor</th>
+                  <th class="py-3 px-3 text-center whitespace-nowrap">Kategori</th>
+                  <!-- Kolom P1 - P20 -->
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P1</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P2</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P3</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P4</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P5</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P6</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P7</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P8</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P9</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P10</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P11</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P12</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P13</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P14</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P15</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P16</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P17</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P18</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P19</th>
+                  <th class="py-3 px-2 text-center bg-indigo-50/50">P20</th>
+                  <th class="py-3 px-3 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="rekap-table-body" class="divide-y divide-slate-100">
+                <tr>
+                  <td colspan="28" class="py-10 text-center text-slate-400">Belum ada data responden yang masuk.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <span>Geser tabel ke kanan untuk melihat rincian jawaban butir P1 sampai P20.</span>
+            <span id="table-showing-count" class="font-semibold text-slate-700">Menampilkan 0 data</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Ubah PIN Admin -->
+  <div id="modal-change-pin" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-sm w-full p-6 shadow-xl">
+      <h3 class="text-lg font-bold text-slate-900">Ubah PIN Akses Rekap</h3>
+      <p class="text-xs text-slate-500 mt-1">PIN baru akan tersimpan di database terpusat dan berlaku di semua perangkat.</p>
+      <form id="form-change-pin" class="mt-4 space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">PIN Baru (Minimal 4 karakter)</label>
+          <input type="text" id="input-new-pin" required minlength="4" placeholder="Contoh: 202699"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="btn-cancel-pin" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+          <button type="submit" class="px-4 py-2 rounded-xl text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white">Simpan PIN</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus Data Responden (Pengganti confirm()) -->
+  <div id="modal-confirm-delete" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 max-w-sm w-full p-6 shadow-xl">
+      <div class="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-bold text-slate-900">Hapus Data Responden?</h3>
+      <p id="delete-target-info" class="text-sm text-slate-600 mt-1">Data yang dihapus tidak dapat dikembalikan.</p>
+      <div class="flex justify-end gap-2 mt-5">
+        <button type="button" id="btn-cancel-delete" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+        <button type="button" id="btn-confirm-delete" class="px-4 py-2 rounded-xl text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifikasi Global -->
+  <div id="toast-notification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toast-box" class="px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-2.5 bg-slate-900 text-white border-slate-700">
+      <span id="toast-message">Notifikasi</span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 px-4 text-center text-xs text-slate-400">
+    Sistem Angket Kepercayaan Diri dalam Belajar Mahasiswa • Penyimpanan Sinkronisasi Real-Time
+  </footer>
+
+  <!-- Script Aplikasi & Integrasi Firebase Firestore -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      collection,
+      addDoc,
+      deleteDoc,
+      onSnapshot,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // =========================================================================
+    // 1. DATA 20 PERNYATAAN ANGKET (FAVORABLE & UNFAVORABLE)
+    // =========================================================================
+    const QUESTIONS = [
+      { no: 1, text: "Saya yakin mampu mengerjakan tugas yang diberikan oleh dosen dengan baik.", type: "F" },
+      { no: 2, text: "Saya mampu menyelesaikan soal-soal yang sulit jika berusaha sungguh-sungguh.", type: "F" },
+      { no: 3, text: "Saya merasa ragu setiap kali dosen memberikan tugas baru.", type: "U" },
+      { no: 4, text: "Saya mudah menyerah apabila menemukan soal perkuliahan yang sulit.", type: "U" },
+      { no: 5, text: "Saya yakin bisa mendapatkan nilai yang memuaskan dalam ujian.", type: "F" },
+      { no: 6, text: "Saya yakin dapat memahami materi perkuliahan apabila memperhatikannya dengan saksama.", type: "F" },
+      { no: 7, text: "Saya merasa sulit untuk bisa memperoleh nilai yang memuaskan di kelas.", type: "U" },
+      { no: 8, text: "Saya merasa hasil pekerjaan saya selalu lebih buruk dari rekan mahasiswa.", type: "U" },
+      { no: 9, text: "Saya menerima masukan dari dosen maupun rekan mahasiswa untuk memperbaiki tugas saya.", type: "F" },
+      { no: 10, text: "Saya menyelesaikan tugas yang menjadi tanggung jawab saya tepat waktu.", type: "F" },
+      { no: 11, text: "Saya mencontek pekerjaan rekan mahasiswa karena tidak yakin dengan jawaban sendiri.", type: "U" },
+      { no: 12, text: "Saya melemparkan kesalahan kepada rekan kelompok ketika tugas kelompok kurang maksimal.", type: "U" },
+      { no: 13, text: "Saya mengetahui materi perkuliahan mana yang sudah saya kuasai dan yang belum.", type: "F" },
+      { no: 14, text: "Saya bertanya kepada dosen apabila ada materi yang benar-benar belum dipahami.", type: "F" },
+      { no: 15, text: "Saya memaksakan diri meniru cara belajar orang lain tanpa melihat kemampuan diri.", type: "U" },
+      { no: 16, text: "Saya merasa kemampuan saya di kelas biasa-biasa saja dan tidak terlalu mencolok.", type: "U" },
+      { no: 17, text: "Saya berani mengacungkan tangan untuk menjawab pertanyaan dari dosen.", type: "F" },
+      { no: 18, text: "Saya percaya diri saat mempresentasikan hasil tugas di depan forum kelas.", type: "F" },
+      { no: 19, text: "Saya merasa gugup dan gemetar saat diminta tampil memaparkan materi di depan kelas.", type: "U" },
+      { no: 20, text: "Saya takut diremehkan rekan mahasiswa apabila pendapat saya salah saat berdiskusi.", type: "U" }
+    ];
+
+    const LIKERT_OPTIONS = [
+      { code: "SS", label: "Sangat Setuju" },
+      { code: "S", label: "Setuju" },
+      { code: "RR", label: "Ragu-Ragu" },
+      { code: "TS", label: "Tidak Setuju" },
+      { code: "STS", label: "Sangat Tidak Setuju" }
+    ];
+
+    // Fungsi hitung skor per item (Favorable: SS=5..STS=1, Unfavorable: SS=1..STS=5)
+    function getLikertScore(answerCode, type) {
+      const favMap = { SS: 5, S: 4, RR: 3, TS: 2, STS: 1 };
+      const unfavMap = { SS: 1, S: 2, RR: 3, TS: 4, STS: 5 };
+      return type === "F" ? (favMap[answerCode] || 0) : (unfavMap[answerCode] || 0);
+    }
+
+    // Kategori skor total (20 soal -> min 20, max 100)
+    function getConfidenceCategory(totalScore) {
+      if (totalScore >= 74) return "Tinggi";
+      if (totalScore >= 47) return "Sedang";
+      return "Rendah";
+    }
+
+    // =========================================================================
+    // 2. STATE APLIKASI
+    // =========================================================================
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+    const appId = typeof __app_id !== "undefined" ? __app_id : "default-app-id";
+
+    let allResponses = []; // Data real-time dari Firestore
+    let isRekapUnlocked = false;
+    let isFormLocked = false;
+    let adminPin = "ADMIN2026";
+    let pendingDeleteId = null;
+
+    // =========================================================================
+    // 3. RENDER 20 SOAL KE DALAM DOM
+    // =========================================================================
+    const questionsContainer = document.getElementById("questions-container");
+
+    function renderQuestions() {
+      questionsContainer.innerHTML = QUESTIONS.map((q) => {
+        const optionsHtml = LIKERT_OPTIONS.map((opt) => `
+          <label class="cursor-pointer select-none">
+            <input type="radio" name="q_${q.no}" value="${opt.code}" class="peer sr-only question-radio" data-qno="${q.no}" />
+            <div class="px-2.5 py-2.5 sm:py-3 rounded-xl border border-slate-200 bg-slate-50/70 text-center transition-all
+                        hover:border-indigo-300 hover:bg-indigo-50/40
+                        peer-checked:bg-indigo-600 peer-checked:border-indigo-600 peer-checked:text-white peer-checked:shadow-sm">
+              <div class="text-xs sm:text-sm font-extrabold">${opt.code}</div>
+              <div class="text-[10px] leading-tight mt-0.5 opacity-85 hidden sm:block">${opt.label}</div>
+            </div>
+          </label>
+        `).join("");
+
+        return `
+          <div id="question-card-${q.no}" class="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-white transition-all duration-200">
+            <div class="flex items-start gap-3">
+              <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                ${q.no}
+              </span>
+              <div class="flex-1">
+                <p class="text-sm sm:text-base font-medium text-slate-800 leading-relaxed">${q.text}</p>
+                <div class="grid grid-cols-5 gap-1.5 sm:gap-2.5 mt-3.5">
+                  ${optionsHtml}
+                </div>
+                <p id="err-q-${q.no}" class="hidden text-xs text-rose-600 font-semibold mt-2">
+                  Silakan pilih salah satu jawaban untuk pernyataan nomor ${q.no}.
+                </p>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // Event listener update progres saat radio dipilih
+      document.querySelectorAll(".question-radio").forEach((radio) => {
+        radio.addEventListener("change", (e) => {
+          const qNo = e.target.dataset.qno;
+          const card = document.getElementById(`question-card-${qNo}`);
+          const err = document.getElementById(`err-q-${qNo}`);
+          if (card) {
+            card.classList.remove("border-rose-400", "bg-rose-50/30");
+            card.classList.add("border-indigo-200", "bg-indigo-50/10");
+          }
+          if (err) err.classList.add("hidden");
+          updateProgress();
+        });
+      });
+    }
+
+    function updateProgress() {
+      let answeredCount = 0;
+      for (let i = 1; i <= QUESTIONS.length; i++) {
+        if (document.querySelector(`input[name="q_${i}"]:checked`)) {
+          answeredCount++;
+        }
+      }
+      const pct = Math.round((answeredCount / QUESTIONS.length) * 100);
+      document.getElementById("progress-count").textContent = `${answeredCount}/${QUESTIONS.length}`;
+      document.getElementById("progress-fill").style.width = `${pct}%`;
+      document.getElementById("progress-percent").textContent = `${pct}%`;
+    }
+
+    // =========================================================================
+    // 4. INISIALISASI FIREBASE & SINKRONISASI REAL-TIME (PUBLIC DATA)
+    // =========================================================================
+    async function initFirebase() {
+      try {
+        if (typeof __firebase_config === "undefined") {
+          throw new Error("Konfigurasi database tidak ditemukan.");
+        }
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+
+        // RULE 3: Auth sebelum query Firestore
+        if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
+          const cred = await signInWithCustomToken(auth, __initial_auth_token);
+          currentUser = cred.user;
+        } else {
+          const cred = await signInAnonymously(auth);
+          currentUser = cred.user;
+        }
+
+        updateDbStatus(true, "Terhubung ke Database Terpusat");
+        listenToSettings();
+        listenToResponses();
+      } catch (err) {
+        console.error("Firebase init error:", err);
+        updateDbStatus(false, "Gagal terhubung ke database");
+        showToast("Gagal terhubung ke server database. Periksa koneksi internet.", "error");
+      }
+    }
+
+    function updateDbStatus(connected, text) {
+      const dot = document.getElementById("db-status-dot");
+      const label = document.getElementById("db-status-text");
+      label.textContent = text;
+      if (connected) {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-rose-500";
+      }
+    }
+
+    // Mendengarkan Pengaturan Global (Status Kunci Form & PIN Admin) di path publik
+    function listenToSettings() {
+      if (!currentUser) return;
+      // RULE 1: /artifacts/{appId}/public/data/{collectionName}
+      const settingsDocRef = doc(db, "artifacts", appId, "public", "data", "angket_settings", "config");
+
+      onSnapshot(
+        settingsDocRef,
+        (snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            isFormLocked = Boolean(data.isFormLocked);
+            if (data.adminPin) {
+              adminPin = String(data.adminPin);
+            }
+          } else {
+            isFormLocked = false;
+            adminPin = "ADMIN2026";
+          }
+          document.getElementById("hint-default-pin").textContent = adminPin;
+          applyFormLockUI();
+        },
+        (error) => {
+          console.error("Error listening settings:", error);
+        }
+      );
+    }
+
+    // Mendengarkan Semua Data Responden secara Real-Time dari semua perangkat
+    function listenToResponses() {
+      if (!currentUser) return;
+      // RULE 1: /artifacts/{appId}/public/data/{collectionName}
+      const responsesColRef = collection(db, "artifacts", appId, "public", "data", "angket_responses");
+
+      // RULE 2: Tidak memakai orderBy/limit di Firestore query, urutkan di memori JS
+      onSnapshot(
+        responsesColRef,
+        (snapshot) => {
+          const list = [];
+          snapshot.forEach((docSnap) => {
+            list.push({ id: docSnap.id, ...docSnap.data() });
+          });
+
+          // Urutkan terbaru di atas berdasarkan createdAtMs
+          list.sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+          allResponses = list;
+
+          // Update badge jumlah responden di navigasi
+          document.getElementById("nav-respondent-badge").textContent = allResponses.length;
+
+          // Cek duplikasi NIM jika user sedang mengetik NIM
+          checkDuplicateNim();
+
+          // Render ulang statistik dan tabel rekap
+          renderRekapStats();
+          renderRekapTable();
+        },
+        (error) => {
+          console.error("Error listening responses:", error);
+          showToast("Gagal memuat data rekapitulasi.", "error");
+        }
+      );
+    }
+
+    // =========================================================================
+    // 5. LOGIKA KONTROL UI & KUNCI FORM / KUNCI REKAP
+    // =========================================================================
+    function applyFormLockUI() {
+      const lockedBanner = document.getElementById("form-locked-banner");
+      const formEl = document.getElementById("angket-form");
+      const successCard = document.getElementById("form-success-card");
+
+      const statusPill = document.getElementById("form-status-pill");
+      const toggleBtn = document.getElementById("btn-toggle-form-lock");
+      const toggleBtnText = document.getElementById("btn-toggle-form-lock-text");
+
+      if (isFormLocked) {
+        lockedBanner.classList.remove("hidden");
+        formEl.classList.add("hidden");
+        successCard.classList.add("hidden");
+
+        statusPill.textContent = "Form Dikunci Admin";
+        statusPill.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700";
+        toggleBtnText.textContent = "Buka Kembali Pengisian Form";
+        toggleBtn.className = "px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition flex items-center gap-2 cursor-pointer bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300";
+      } else {
+        lockedBanner.classList.add("hidden");
+        if (successCard.classList.contains("hidden")) {
+          formEl.classList.remove("hidden");
+        }
+
+        statusPill.textContent = "Form Dibuka";
+        statusPill.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700";
+        toggleBtnText.textContent = "Kunci Pengisian Form";
+        toggleBtn.className = "px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition flex items-center gap-2 cursor-pointer bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300";
+      }
+    }
+
+    // Navigasi Tab
+    const tabBtnForm = document.getElementById("tab-btn-form");
+    const tabBtnRekap = document.getElementById("tab-btn-rekap");
+    const sectionForm = document.getElementById("section-form");
+    const sectionRekap = document.getElementById("section-rekap");
+    const progressBarContainer = document.getElementById("form-progress-bar-container");
+
+    function switchTab(target) {
+      if (target === "form") {
+        sectionForm.classList.remove("hidden");
+        sectionRekap.classList.add("hidden");
+        progressBarContainer.classList.remove("hidden");
+
+        tabBtnForm.className = "flex-1 sm:flex-initial px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-indigo-700 shadow-sm flex items-center justify-center gap-2";
+        tabBtnRekap.className = "flex-1 sm:flex-initial px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center justify-center gap-2";
+      } else {
+        sectionForm.classList.add("hidden");
+        sectionRekap.classList.remove("hidden");
+        progressBarContainer.classList.add("hidden");
+
+        tabBtnRekap.className = "flex-1 sm:flex-initial px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-indigo-700 shadow-sm flex items-center justify-center gap-2";
+        tabBtnForm.className = "flex-1 sm:flex-initial px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center justify-center gap-2";
+
+        updateRekapLockView();
+      }
+    }
+
+    tabBtnForm.addEventListener("click", () => switchTab("form"));
+    tabBtnRekap.addEventListener("click", () => switchTab("rekap"));
+    document.getElementById("btn-go-rekap-from-success").addEventListener("click", () => switchTab("rekap"));
+
+    function updateRekapLockView() {
+      const lockScreen = document.getElementById("rekap-lock-screen");
+      const dashboard = document.getElementById("rekap-dashboard");
+      const navIcon = document.getElementById("nav-lock-icon");
+
+      if (isRekapUnlocked) {
+        lockScreen.classList.add("hidden");
+        dashboard.classList.remove("hidden");
+        navIcon.classList.remove("text-amber-600");
+        navIcon.classList.add("text-emerald-600");
+        renderRekapStats();
+        renderRekapTable();
+      } else {
+        lockScreen.classList.remove("hidden");
+        dashboard.classList.add("hidden");
+        navIcon.classList.remove("text-emerald-600");
+        navIcon.classList.add("text-amber-600");
+      }
+    }
+
+    // Buka Kunci Rekap dengan PIN
+    document.getElementById("unlock-rekap-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const inputPin = document.getElementById("input-admin-pin").value.trim();
+      const errMsg = document.getElementById("pin-error-msg");
+
+      if (inputPin === adminPin) {
+        isRekapUnlocked = true;
+        errMsg.classList.add("hidden");
+        document.getElementById("input-admin-pin").value = "";
+        updateRekapLockView();
+        showToast("Akses rekap data berhasil dibuka.", "success");
+      } else {
+        errMsg.classList.remove("hidden");
+      }
+    });
+
+    // Kunci Kembali Layar Rekap
+    document.getElementById("btn-lock-rekap-now").addEventListener("click", () => {
+      isRekapUnlocked = false;
+      updateRekapLockView();
+      showToast("Tampilan rekap data telah dikunci kembali.", "info");
+    });
+
+    // Saklar Kunci / Buka Penerimaan Angket di Database Terpusat
+    document.getElementById("btn-toggle-form-lock").addEventListener("click", async () => {
+      if (!currentUser || !db) return;
+      try {
+        const settingsDocRef = doc(db, "artifacts", appId, "public", "data", "angket_settings", "config");
+        const nextState = !isFormLocked;
+        await setDoc(settingsDocRef, {
+          isFormLocked: nextState,
+          adminPin: adminPin,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        showToast(
+          nextState
+            ? "Pengisian angket berhasil DIKUNCI untuk semua perangkat."
+            : "Pengisian angket DIBUKA kembali.",
+          "success"
+        );
+      } catch (err) {
+        console.error("Gagal ubah status kunci:", err);
+        showToast("Gagal mengubah status kunci form.", "error");
+      }
+    });
+
+    // Modal Ubah PIN Admin
+    const modalChangePin = document.getElementById("modal-change-pin");
+    document.getElementById("btn-open-change-pin").addEventListener("click", () => {
+      document.getElementById("input-new-pin").value = "";
+      modalChangePin.classList.remove("hidden");
+    });
+    document.getElementById("btn-cancel-pin").addEventListener("click", () => {
+      modalChangePin.classList.add("hidden");
+    });
+    document.getElementById("form-change-pin").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const newPin = document.getElementById("input-new-pin").value.trim();
+      if (newPin.length < 4) return;
+      try {
+        const settingsDocRef = doc(db, "artifacts", appId, "public", "data", "angket_settings", "config");
+        await setDoc(settingsDocRef, {
+          adminPin: newPin,
+          isFormLocked: isFormLocked,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        modalChangePin.classList.add("hidden");
+        showToast("PIN akses rekap berhasil diperbarui.", "success");
+      } catch (err) {
+        console.error("Gagal simpan PIN:", err);
+        showToast("Gagal menyimpan PIN baru.", "error");
+      }
+    });
+
+    // =========================================================================
+    // 6. VALIDASI DUPLIKASI NIM & PENGIRIMAN FORM ANGKET
+    // =========================================================================
+    const inputNim = document.getElementById("input-nim");
+    function checkDuplicateNim() {
+      const nimVal = inputNim.value.trim().toLowerCase();
+      const warningBox = document.getElementById("nim-duplicate-warning");
+      if (!nimVal) {
+        warningBox.classList.add("hidden");
+        return false;
+      }
+      const isDuplicate = allResponses.some((r) => (r.nim || "").trim().toLowerCase() === nimVal);
+      if (isDuplicate) {
+        warningBox.classList.remove("hidden");
+      } else {
+        warningBox.classList.add("hidden");
+      }
+      return isDuplicate;
+    }
+    inputNim.addEventListener("input", checkDuplicateNim);
+
+    document.getElementById("angket-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (isFormLocked) {
+        showToast("Pengisian angket sudah dikunci oleh admin.", "error");
+        return;
+      }
+
+      if (!currentUser || !db) {
+        showToast("Database belum siap. Tunggu beberapa detik lalu coba lagi.", "error");
+        return;
+      }
+
+      // Validasi Identitas
+      const nama = document.getElementById("input-nama").value.trim();
+      const nim = document.getElementById("input-nim").value.trim();
+      const kelas = document.getElementById("input-kelas").value.trim();
+
+      let firstInvalidEl = null;
+
+      const errNama = document.getElementById("err-nama");
+      const errNim = document.getElementById("err-nim");
+      const errKelas = document.getElementById("err-kelas");
+
+      if (!nama) {
+        errNama.classList.remove("hidden");
+        if (!firstInvalidEl) firstInvalidEl = document.getElementById("input-nama");
+      } else {
+        errNama.classList.add("hidden");
+      }
+
+      if (!nim) {
+        errNim.classList.remove("hidden");
+        if (!firstInvalidEl) firstInvalidEl = document.getElementById("input-nim");
+      } else {
+        errNim.classList.add("hidden");
+      }
+
+      if (!kelas) {
+        errKelas.classList.remove("hidden");
+        if (!firstInvalidEl) firstInvalidEl = document.getElementById("input-kelas");
+      } else {
+        errKelas.classList.add("hidden");
+      }
+
+      // Cek Duplikasi NIM
+      const isDup = checkDuplicateNim();
+      const allowDup = document.getElementById("allow-duplicate-nim").checked;
+      if (isDup && !allowDup) {
+        showToast("NIM sudah terdaftar. Centang 'Tetap izinkan kirim ulang' jika ingin mengirim lagi.", "error");
+        document.getElementById("nim-duplicate-warning").scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      // Validasi 20 Pernyataan
+      const answersObj = {};
+      const scoresObj = {};
+      let totalScore = 0;
+
+      for (const q of QUESTIONS) {
+        const checked = document.querySelector(`input[name="q_${q.no}"]:checked`);
+        const card = document.getElementById(`question-card-${q.no}`);
+        const err = document.getElementById(`err-q-${q.no}`);
+
+        if (!checked) {
+          card.classList.add("border-rose-400", "bg-rose-50/30");
+          err.classList.remove("hidden");
+          if (!firstInvalidEl) firstInvalidEl = card;
+        } else {
+          card.classList.remove("border-rose-400", "bg-rose-50/30");
+          err.classList.add("hidden");
+          const code = checked.value;
+          const itemScore = getLikertScore(code, q.type);
+          answersObj[`p${q.no}`] = code;
+          scoresObj[`p${q.no}`] = itemScore;
+          totalScore += itemScore;
+        }
+      }
+
+      if (firstInvalidEl) {
+        firstInvalidEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        showToast("Masih ada bagian yang belum diisi. Silakan lengkapi bagian bertanda merah.", "error");
+        return;
+      }
+
+      // Proses Simpan ke Firestore
+      const submitBtn = document.getElementById("btn-submit-angket");
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>Menyimpan ke Database...</span>`;
+
+      try {
+        const kategori = getConfidenceCategory(totalScore);
+        const now = new Date();
+        const formattedTime = now.toLocaleString("id-ID", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+
+        const payload = {
+          nama,
+          nim,
+          kelas,
+          answers: answersObj,
+          scores: scoresObj,
+          totalScore,
+          kategori,
+          submittedAtText: formattedTime,
+          createdAtMs: Date.now(),
+          createdAt: serverTimestamp(),
+          submittedByUid: currentUser.uid
+        };
+
+        // RULE 1: Simpan ke koleksi publik terpusat
+        const responsesColRef = collection(db, "artifacts", appId, "public", "data", "angket_responses");
+        await addDoc(responsesColRef, payload);
+
+        // Tampilkan layar sukses
+        document.getElementById("angket-form").classList.add("hidden");
+        const successCard = document.getElementById("form-success-card");
+        successCard.classList.remove("hidden");
+
+        document.getElementById("submitted-summary-box").innerHTML = `
+          <div class="flex justify-between"><span class="text-slate-500">Nama:</span><span class="font-bold text-slate-900">${escapeHtml(nama)}</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">NIM:</span><span class="font-bold text-slate-900">${escapeHtml(nim)}</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Semester/Kelas:</span><span class="font-bold text-slate-900">${escapeHtml(kelas)}</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Waktu Kirim:</span><span class="font-semibold text-slate-700">${formattedTime}</span></div>
+        `;
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        showToast("Jawaban berhasil disimpan ke rekap terpusat!", "success");
+      } catch (err) {
+        console.error("Gagal mengirim angket:", err);
+        showToast("Terjadi kesalahan saat menyimpan jawaban. Coba lagi.", "error");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+          <span>Kirim Jawaban Angket</span>
+        `;
+      }
+    });
+
+    // Tombol Isi Ulang untuk Responden Lain
+    document.getElementById("btn-fill-again").addEventListener("click", () => {
+      document.getElementById("angket-form").reset();
+      document.getElementById("allow-duplicate-nim").checked = false;
+      document.getElementById("nim-duplicate-warning").classList.add("hidden");
+      document.querySelectorAll("[id^='question-card-']").forEach((el) => {
+        el.classList.remove("border-indigo-200", "bg-indigo-50/10", "border-rose-400", "bg-rose-50/30");
+      });
+      updateProgress();
+      document.getElementById("form-success-card").classList.add("hidden");
+      if (!isFormLocked) {
+        document.getElementById("angket-form").classList.remove("hidden");
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    // =========================================================================
+    // 7. RENDER STATISTIK, TABEL REKAP, HAPUS BARIS & EXPORT CSV
+    // =========================================================================
+    function renderRekapStats() {
+      const total = allResponses.length;
+      document.getElementById("stat-total").textContent = total;
+
+      if (total === 0) {
+        document.getElementById("stat-avg").textContent = "0.0";
+        document.getElementById("stat-high").textContent = "0";
+        document.getElementById("stat-mid-low").textContent = "0 / 0";
+        return;
+      }
+
+      const sumScore = allResponses.reduce((acc, r) => acc + (Number(r.totalScore) || 0), 0);
+      const avg = (sumScore / total).toFixed(1);
+      const highCount = allResponses.filter((r) => r.kategori === "Tinggi").length;
+      const midCount = allResponses.filter((r) => r.kategori === "Sedang").length;
+      const lowCount = allResponses.filter((r) => r.kategori === "Rendah").length;
+
+      document.getElementById("stat-avg").textContent = avg;
+      document.getElementById("stat-high").textContent = highCount;
+      document.getElementById("stat-mid-low").textContent = `${midCount} / ${lowCount}`;
+    }
+
+    function getFilteredResponses() {
+      const keyword = document.getElementById("search-rekap").value.trim().toLowerCase();
+      const catFilter = document.getElementById("filter-kategori").value;
+
+      return allResponses.filter((r) => {
+        const matchCat = catFilter === "ALL" || r.kategori === catFilter;
+        const matchText =
+          !keyword ||
+          (r.nama || "").toLowerCase().includes(keyword) ||
+          (r.nim || "").toLowerCase().includes(keyword) ||
+          (r.kelas || "").toLowerCase().includes(keyword);
+        return matchCat && matchText;
+      });
+    }
+
+    function renderRekapTable() {
+      const tbody = document.getElementById("rekap-table-body");
+      const filtered = getFilteredResponses();
+
+      document.getElementById("table-showing-count").textContent = `Menampilkan ${filtered.length} dari ${allResponses.length} data`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="28" class="py-10 text-center text-slate-400">
+              ${allResponses.length === 0 ? "Belum ada responden yang mengisi angket." : "Tidak ada data yang cocok dengan pencarian."}
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((item, idx) => {
+        const catBadge =
+          item.kategori === "Tinggi"
+            ? "bg-emerald-100 text-emerald-800"
+            : item.kategori === "Sedang"
+            ? "bg-amber-100 text-amber-800"
+            : "bg-rose-100 text-rose-800";
+
+        let itemCells = "";
+        for (let i = 1; i <= 20; i++) {
+          const ans = item.answers ? (item.answers[`p${i}`] || "-") : "-";
+          itemCells += `<td class="py-2.5 px-2 text-center font-semibold text-slate-700 border-l border-slate-100">${escapeHtml(ans)}</td>`;
+        }
+
+        return `
+          <tr class="hover:bg-slate-50/90 transition">
+            <td class="py-2.5 px-3 font-bold text-slate-500 sticky left-0 bg-white">${idx + 1}</td>
+            <td class="py-2.5 px-3 text-xs text-slate-500 whitespace-nowrap">${escapeHtml(item.submittedAtText || "-")}</td>
+            <td class="py-2.5 px-4 font-bold text-slate-900 whitespace-nowrap">${escapeHtml(item.nama || "-")}</td>
+            <td class="py-2.5 px-3 font-mono text-xs text-slate-700 whitespace-nowrap">${escapeHtml(item.nim || "-")}</td>
+            <td class="py-2.5 px-3 text-slate-700 whitespace-nowrap">${escapeHtml(item.kelas || "-")}</td>
+            <td class="py-2.5 px-3 text-center font-extrabold text-indigo-700">${item.totalScore ?? "-"}</td>
+            <td class="py-2.5 px-3 text-center whitespace-nowrap">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${catBadge}">${escapeHtml(item.kategori || "-")}</span>
+            </td>
+            ${itemCells}
+            <td class="py-2.5 px-3 text-center border-l border-slate-100">
+              <button type="button" class="btn-delete-row p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                data-id="${item.id}" data-nama="${escapeHtml(item.nama || "")}" data-nim="${escapeHtml(item.nim || "")}" title="Hapus baris ini">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      // Event listener hapus baris
+      document.querySelectorAll(".btn-delete-row").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          pendingDeleteId = btn.dataset.id;
+          document.getElementById("delete-target-info").textContent =
+            `Hapus data atas nama "${btn.dataset.nama}" (NIM: ${btn.dataset.nim}) dari rekapitulasi terpusat?`;
+          document.getElementById("modal-confirm-delete").classList.remove("hidden");
+        });
+      });
+    }
+
+    document.getElementById("search-rekap").addEventListener("input", renderRekapTable);
+    document.getElementById("filter-kategori").addEventListener("change", renderRekapTable);
+
+    // Konfirmasi Hapus Data Responden
+    document.getElementById("btn-cancel-delete").addEventListener("click", () => {
+      pendingDeleteId = null;
+      document.getElementById("modal-confirm-delete").classList.add("hidden");
+    });
+
+    document.getElementById("btn-confirm-delete").addEventListener("click", async () => {
+      if (!pendingDeleteId || !currentUser || !db) return;
+      try {
+        const targetDocRef = doc(db, "artifacts", appId, "public", "data", "angket_responses", pendingDeleteId);
+        await deleteDoc(targetDocRef);
+        showToast("Data responden berhasil dihapus.", "success");
+      } catch (err) {
+        console.error("Gagal menghapus dokumen:", err);
+        showToast("Gagal menghapus data.", "error");
+      } finally {
+        pendingDeleteId = null;
+        document.getElementById("modal-confirm-delete").classList.add("hidden");
+      }
+    });
+
+    // Export CSV (Siap dibuka di Excel)
+    document.getElementById("btn-export-csv").addEventListener("click", () => {
+      if (allResponses.length === 0) {
+        showToast("Belum ada data untuk diunduh.", "error");
+        return;
+      }
+
+      const headers = [
+        "No",
+        "Waktu Pengisian",
+        "Nama Lengkap",
+        "NIM",
+        "Semester/Kelas",
+        ...Array.from({ length: 20 }, (_, i) => `P${i + 1} (Jawaban)`),
+        ...Array.from({ length: 20 }, (_, i) => `P${i + 1} (Skor)`),
+        "Total Skor",
+        "Kategori Kepercayaan Diri"
+      ];
+
+      const rows = allResponses.map((r, index) => {
+        const ansCols = Array.from({ length: 20 }, (_, i) => (r.answers ? r.answers[`p${i + 1}`] || "" : ""));
+        const scoreCols = Array.from({ length: 20 }, (_, i) => (r.scores ? r.scores[`p${i + 1}`] ?? "" : ""));
+        return [
+          index + 1,
+          r.submittedAtText || "",
+          r.nama || "",
+          `'${r.nim || ""}`, // Tanda petik agar NIM panjang tidak berubah jadi scientific notation di Excel
+          r.kelas || "",
+          ...ansCols,
+          ...scoreCols,
+          r.totalScore ?? "",
+          r.kategori || ""
+        ];
+      });
+
+      const csvContent =
+        "\uFEFF" + // BOM UTF-8 agar karakter terbaca rapi di Microsoft Excel
+        [headers, ...rows]
+          .map((row) =>
+            row
+              .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+              .join(",")
+          )
+          .join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const dateStr = new Date().toISOString().slice(0, 10);
+      link.href = url;
+      link.download = `Rekap_Angket_Kepercayaan_Diri_${dateStr}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast("File rekap CSV berhasil diunduh.", "success");
+    });
+
+    // =========================================================================
+    // 8. UTILITAS (TOAST & ESCAPE HTML)
+    // =========================================================================
+    let toastTimer = null;
+    function showToast(message, type = "info") {
+      const toast = document.getElementById("toast-notification");
+      const box = document.getElementById("toast-box");
+      const msgEl = document.getElementById("toast-message");
+
+      msgEl.textContent = message;
+      box.className = "px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-2.5 ";
+      if (type === "success") {
+        box.className += "bg-emerald-700 text-white border-emerald-600";
+      } else if (type === "error") {
+        box.className += "bg-rose-700 text-white border-rose-600";
+      } else {
+        box.className += "bg-slate-900 text-white border-slate-700";
+      }
+
+      toast.classList.remove("translate-y-20", "opacity-0");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add("translate-y-20", "opacity-0");
+      }, 3500);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Jalankan inisialisasi saat halaman dimuat
+    renderQuestions();
+    updateProgress();
+    initFirebase();
+  </script>
+</body>
+</html>
